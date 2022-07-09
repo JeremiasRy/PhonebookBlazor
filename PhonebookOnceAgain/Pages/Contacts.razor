@@ -1,0 +1,101 @@
+﻿@using System.Linq;
+@using System.Collections.Generic;
+@using System;
+@page "/contacts"
+@using Data
+@inject IContactData db
+@inject NavigationManager nav
+
+<h3>Contacts</h3>
+
+<EditForm Model="@contactDisplayModel" OnValidSubmit="AddContact">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+
+    <div class="mb-3 col-3"> 
+        <label for="ContactName" class="form-label">Contact Name</label>
+        <InputText id="ContactName" class="form-control" @bind-Value="contactDisplayModel.Name"></InputText>
+        <div id="nameHelp" class="form-text"></div>
+    </div>
+
+     <div class="mb-3 col-3"> 
+        <label for="ContactNumber" class="form-label">Number</label>
+        <InputText id="ContactNumber" class="form-control" @bind-Value="contactDisplayModel.Number"></InputText>
+        <div id="nameHelp" class="form-text">Number in form 000-0000000 or 00-00000000</div>
+    </div>
+    <button type="submit" class="btn btn-primary">Add contact</button>
+</EditForm>
+<div>
+    <EditForm Model="@searching" OnSubmit="@Search">
+        <input @bind-value="searching.SearchValue" placeholder="Search by name"/>
+        <button type="submit">Search</button>
+    </EditForm>
+    
+</div>
+@if (contacts.Count() == 0)
+{
+    <p><em>Can't find anything...</em></p>
+} 
+else 
+  {
+      <table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Name</th>
+				<th>Number</th>
+                <th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach(var person in contacts)
+			{
+				<tr>
+					<td><a href="/contact/@person.Id">@person.Name</a></td>
+					<td>@person.Number</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+  }
+
+
+@code {
+    private ContactDisplayModel contactDisplayModel = new ContactDisplayModel();
+    private IEnumerable<ContactModel> contacts = new List<ContactModel>();
+    protected override async Task OnInitializedAsync() => contacts = await db.GetContacts();
+    private SearchTerm searching = new SearchTerm();
+
+    private void AddContact()
+    {
+        ContactModel newContact = new ContactModel
+            {
+                Name = contactDisplayModel.Name,
+                Number = contactDisplayModel.Number,
+            };
+
+        db.InsertContact(newContact);
+        contacts = contacts.Append(newContact);
+        contactDisplayModel = new ContactDisplayModel();
+    }
+    private async void Search()
+    {
+        var search = searching.SearchValue;
+        if (contacts != null && search != null)
+        {
+
+            if (search == "")
+            {
+                contacts = await db.GetContacts();
+                return; 
+            }
+            var searchResult = contacts.Where(x => x.Name.ToLower().Contains(search));
+            if (searchResult.Any())
+            {
+                contacts = searchResult;
+            }
+        }
+    }
+
+
+
+}
