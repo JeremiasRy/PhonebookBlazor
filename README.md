@@ -1,5 +1,5 @@
 # PhonebookBlazor
-Another phonebook but with blazor and sql database
+Phonebook with blazor and sql database
 
 Basically same app that was one of the exercises in fullstack course by Helsinki university.
 It has some basic form validation with some regular expressions etc. Also a simple search function. 
